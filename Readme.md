@@ -1,4 +1,4 @@
-# Go Backend Framework
+# Go Backend Framework (repository under development)
 ___
 ## Framework for quickly creating backend servers
 
