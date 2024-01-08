@@ -1,4 +1,4 @@
-package rest
+package apperror
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 
 type appHandler func(http.ResponseWriter, *http.Request) error
 
-func ErrorMiddleware(h appHandler) http.HandlerFunc {
+func Middleware(h appHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var appErr *AppError
 		err := h(w, r)
@@ -18,8 +18,7 @@ func ErrorMiddleware(h appHandler) http.HandlerFunc {
 					w.Write(ErrNotFound.Marshal())
 					return
 				}
-				var err *AppError
-				errors.As(err, &err)
+				err := err.(*AppError)
 				w.WriteHeader(http.StatusBadRequest)
 				w.Write(err.Marshal())
 				return
@@ -29,19 +28,3 @@ func ErrorMiddleware(h appHandler) http.HandlerFunc {
 		}
 	}
 }
-
-//func AcceptHandler(cType string) func(http.Handler) http.Handler {
-//	m := func(next http.Handler) http.Handler {
-//		fn := func(w http.ResponseWriter, r *http.Request) {
-//			if r.Header.Get("Accept") != cType {
-//				writeError(w, r, newNotAcceptableError(cType))
-//				return
-//			}
-//
-//			next.ServeHTTP(w, r)
-//		}
-//		return http.HandlerFunc(fn)
-//	}
-//
-//	return m
-//}

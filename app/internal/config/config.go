@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"github.com/basterrus/go_backend_framework/pkg/logging"
 	"github.com/ilyakaznacheev/cleanenv"
 	"log"
 	"os"
@@ -15,7 +16,12 @@ type Config struct {
 	MaxAttempts   int  `yaml:"max_attempts" env:"MAX_ATTEMPTS" env-default:"5"`
 	MaxDelay      int  `yaml:"max_delay" env:"MAX_DELAY" env-default:"3"`
 	IsBinary      bool `yaml:"is_binary" env:"IS_BINARY" env-default:"false"`
-	HTTP          struct {
+	Listen        struct {
+		Type   string `yaml:"type" env-default:"port"`
+		BindIP string `yaml:"bind_ip" env-default:"localhost"`
+		Port   string `yaml:"port" env-default:"8080"`
+	}
+	HTTP struct {
 		IP           string        `yaml:"ip" env:"HTTP-IP"`
 		Port         int           `yaml:"port" env:"HTTP-PORT"`
 		ReadTimeout  time.Duration `yaml:"read-timeout" env:"HTTP-READ-TIMEOUT"`
@@ -48,12 +54,22 @@ type Config struct {
 		Port     string `yaml:"port" env:"PSQL_PORT" env-required:"true"`
 		Database string `yaml:"database" env:"PSQL_DATABASE" env-required:"true"`
 	} `yaml:"postgresql"`
+	//MongoDB struct {
+	//	Host               string        `yaml:"host" env-required:"true"`
+	//	Port               string        `yaml:"port" env-required:"true"`
+	//	Username           string        `yaml:"username"`
+	//	Password           string        `yaml:"password"`
+	//	AuthDB             string        `yaml:"auth_db" env-required:"true"`
+	//	Database           string        `yaml:"database" env-required:"true"`
+	//	Collection         string        `yaml:"collection" env-required:"true"`
+	//	RequestContextTime time.Duration `yaml:"request_context_time" env-required:"true"`
+	//} `yaml:"mongodb" env-required:"true"`
 }
 
 const (
 	EnvConfigPath      = "CONFIG-PATH"
 	FlagConfigPath     = "config"
-	FlagConfigPathName = "/Users/pavelnedosivin/GolandProjects/production-service/configs/config.yaml"
+	FlagConfigPathName = "/Users/pavelnedosivin/GolandProjects/go_backend_framework/config.yml"
 	DescriptionText    = "this is app config file"
 )
 
@@ -61,7 +77,7 @@ var configPath string
 var instance *Config
 var once sync.Once
 
-func GetConfig() *Config {
+func GetConfig(logger logging.Logger) *Config {
 	once.Do(func() {
 		flag.StringVar(
 			&configPath,
@@ -71,7 +87,7 @@ func GetConfig() *Config {
 		)
 		flag.Parse()
 
-		log.Print("config init")
+		logger.Debug("config init")
 
 		if configPath == "" {
 			configPath = os.Getenv(EnvConfigPath)
