@@ -1,0 +1,18 @@
+#### GET Users list
+GET http://127.0.0.1:8080/api/users/6200ee9f-306b-4910-86d1-9e24c0153e91
+Content-Type: application/json
+
+
+#### POST New Users
+POST http://127.0.0.1:8080/api/users
+Content-Type: application/json
+
+{
+  "username": "TestUser",
+  "first_name": "Ugly222",
+  "last_name": "Ugly@@",
+  "email": "Ugly@Ugly.com",
+  "password": "Qwer12342",
+  "repeat_password": "Qwer12342"
+}
+

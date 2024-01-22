@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/basterrus/go_backend_framework/internal/config"
-	"github.com/basterrus/go_backend_framework/internal/user"
+	auth "github.com/basterrus/go_backend_framework/internal/domain/authorization"
+	usr "github.com/basterrus/go_backend_framework/internal/domain/user"
 	"github.com/basterrus/go_backend_framework/pkg/client"
 	"github.com/basterrus/go_backend_framework/pkg/logging"
 	"github.com/basterrus/go_backend_framework/pkg/metric"
@@ -20,6 +21,17 @@ import (
 	"syscall"
 	"time"
 )
+
+//@title Framework Application API
+//@version 1.0
+//description REST API service for Framework Application
+
+// @host      127.0.0.1:8080
+// @BasePath  /
+
+//@securityDefinitions.apikey ApiKeyAuth
+//@in header
+//@name Authorization
 
 func main() {
 	logging.Init()
@@ -46,18 +58,30 @@ func main() {
 	router.Handler(http.MethodGet, "/swagger", http.RedirectHandler("/swagger/index.html", http.StatusMovedPermanently))
 	router.Handler(http.MethodGet, "/swagger/*any", httpSwagger.WrapHandler)
 
-	userStorage := user.NewStorage(pgClient, logger)
-	userService, err := user.NewService(userStorage, logger)
+	userStorage := usr.NewStorage(pgClient, logger)
+	authStorage := auth.NewStorage(pgClient, logger)
+
+	userService, err := usr.NewService(userStorage, logger)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	authService, err := auth.NewAuthService(authStorage, logger)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	usersHandler := user.Handler{
+	usersHandler := usr.Handler{
 		Logger:      logger,
 		UserService: userService,
 	}
 
+	authHandler := auth.Handler{
+		Logger:      logger,
+		AuthService: authService,
+	}
+
 	usersHandler.Register(router)
+	authHandler.Register(router)
 
 	logger.Println("start application")
 	start(router, logger, cfg)

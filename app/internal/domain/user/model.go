@@ -8,18 +8,23 @@ import (
 )
 
 type User struct {
-	Id             int       `json:"id"`
-	Uuid           uuid.UUID `json:"uuid"`
-	Username       string    `json:"username"`
-	FirstName      string    `json:"first_name,omitempty"`
-	LastName       string    `json:"last_name,omitempty"`
-	Email          string    `json:"email"`
-	Password       string    `json:"-"`
-	RepeatPassword string    `json:"-"`
+	Id           uint   `json:"-" db:"id"`
+	RoleId       int    `json:"role_id" `
+	Uuid         string `json:"uuid"`
+	Username     string `json:"username" `
+	FirstName    string `json:"first_name,omitempty"`
+	LastName     string `json:"last_name,omitempty"`
+	Email        string `json:"email"`
+	PasswordHash string `json:"-"`
+	//AccessToken  string `json:"access_token"`
+	//RefreshToken string `json:"refresh_token"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
 }
 
 type CreateUserDTO struct {
-	Id             int           `json:"-"`
+	Id             uint          `json:"-"`
+	RoleId         int           `json:"role_id"`
 	Uuid           uuid.UUID     `json:"uuid"`
 	Username       string        `json:"username"`
 	FirstName      string        `json:"first_name,omitempty"`
@@ -37,14 +42,18 @@ type UpdateUserDTO struct {
 	Email     string `json:"email"`
 }
 
+type SignIn struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func NewUser(dto CreateUserDTO) User {
 	return User{
-		Username:       dto.Username,
-		FirstName:      dto.FirstName,
-		LastName:       dto.LastName,
-		Email:          dto.Email,
-		Password:       dto.Password,
-		RepeatPassword: dto.RepeatPassword,
+		Username:  dto.Username,
+		FirstName: dto.FirstName,
+		LastName:  dto.LastName,
+		Email:     dto.Email,
 	}
 }
 
@@ -57,27 +66,10 @@ func UpdatedUser(dto UpdateUserDTO) User {
 	}
 }
 
-func generatePasswordHash(password string) (string, error) {
+func (u *User) GeneratePasswordHash(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
 		return "", fmt.Errorf("failed to hash password due to error %w", err)
 	}
 	return string(hash), nil
-}
-
-func (u *User) CheckPassword(password string) error {
-	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
-	if err != nil {
-		return fmt.Errorf("password does not match")
-	}
-	return nil
-}
-
-func (u *User) GeneratePasswordHash() error {
-	pwd, err := generatePasswordHash(u.Password)
-	if err != nil {
-		return err
-	}
-	u.Password = pwd
-	return nil
 }

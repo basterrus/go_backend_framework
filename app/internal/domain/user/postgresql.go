@@ -19,21 +19,22 @@ func NewStorage(client client.PgClient, logger logging.Logger) Storage {
 }
 
 func (r repository) Create(ctx context.Context, user User) (uuid string, err error) {
-	r.logger.Infof("postgres create")
-	err = r.client.QueryRow(ctx, `INSERT INTO public."user" (uuid, username, first_name, last_name, email, password_hash) VALUES ($1, $2, $3, $4, $5, $6) RETURNING uuid`,
+	r.logger.Infof("[POSTGRES client] create user item")
+	err = r.client.QueryRow(ctx, `INSERT INTO public."user" (uuid, username, first_name, last_name, email, password_hash) 
+										VALUES ($1, $2, $3, $4, $5, $6) RETURNING uuid`,
 		user.Uuid,
 		user.Username,
 		user.FirstName,
 		user.LastName,
 		user.Email,
-		user.Password,
+		user.PasswordHash,
 	).Scan(&uuid)
 
 	return uuid, err
 }
 
 func (r repository) FindByUUID(ctx context.Context, uuid string) (User, error) {
-	r.logger.Debugf("recieve uuid: %s", uuid)
+	r.logger.Debugf("[POSTGRES client] recieve uuid: %s", uuid)
 	var user User
 
 	row := r.client.QueryRow(ctx, `SELECT id, uuid, username, first_name, last_name, email FROM public."user" WHERE uuid=$1`, uuid)
@@ -53,8 +54,17 @@ func (r repository) FindByUUID(ctx context.Context, uuid string) (User, error) {
 }
 
 func (r repository) FindOne(ctx context.Context, uuid string) (User, error) {
-	//TODO implement me
-	panic("implement me")
+	r.logger.Debugf("[FindOne User] recieve user uuid: %s", uuid)
+	tx, err := r.client.Begin(ctx)
+	if err != nil {
+		r.logger.Debugf("[Delete User] error to begin transaction: %s", err)
+	}
+
+	if _, err := tx.Exec(ctx, ``, uuid); err != nil {
+
+	}
+
+	return User{}, nil
 }
 
 func (r repository) Update(ctx context.Context, user User) error {
@@ -64,10 +74,17 @@ func (r repository) Update(ctx context.Context, user User) error {
 }
 
 func (r repository) Delete(ctx context.Context, uuid string) error {
-	r.logger.Debugf("recieve uuid: %s", uuid)
-	if _, err := r.client.Exec(ctx, `delete from public."user" where uuid=$1`, uuid); err == nil {
+	r.logger.Debugf("[Delete User] receive user uuid: %s", uuid)
+	tx, err := r.client.Begin(ctx)
+	if err != nil {
+		r.logger.Debugf("[Delete User] error to begin transaction: %s", err)
+	}
+	if _, err := tx.Exec(ctx, `delete from public."user" where uuid=$1`, uuid); err != nil {
+		tx.Rollback(ctx)
 		return err
 	}
-	r.logger.Debugf("user with uuid: %s was deleted", uuid)
-	return nil
+
+	r.logger.Debugf("[Delete User] user with uuid: %s was deleted", uuid)
+
+	return tx.Commit(ctx)
 }

@@ -1,16 +1,29 @@
 package internal
 
-const MimeTypeContentType = "Content-Type"
+const (
+	MimeTypeContentType     = "Content-Type"
+	MimeTypeApplicationZip  = "application/zip"
+	MimeTypeApplicationJSON = "application/json"
+)
 
-const MimeTypeApplicationZip = "application/zip"
-const MimeTypeApplicationJSON = "application/json"
+const (
+	// SignIn Auth sign_in handler
+	SignIn = "/api/auth/sign_in"
+	SignUp = "/api/auth/sign_up"
 
-// UsersURL URI user path
-const UsersURL = "/api/users"
-const UserURL = "/api/users/:uuid"
+	//RolesURI
+	RolesURL = "/api/roles"
+	RoleURL  = "/api/roles/:id"
 
-// Auth sign_in handler
-const SignIn = "/api/auth/sign_in"
-const SignUp = "/api/auth/sign_up"
+	// UsersURL URI user path
+	UsersURL = "/api/users"
+	UserURL  = "/api/users/:uuid"
 
-const UserTable = "public.user"
+	// CategoriesURL Category  URI user path
+	CategoriesURL = "/api/categories"
+	CategoryURL   = "/api/categories/:id"
+)
+
+const (
+	UserTable = "public.user"
+)
